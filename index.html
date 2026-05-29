@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pagos PDP - Inicio de Sesión</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+    <header class="navbar">
+        <div class="navbar-icon">🏠</div>
+        <div class="navbar-title">
+            <h1>Pagos PDP</h1>
+            <p>Sistema de cobros</p>
+        </div>
+    </header>
+
+    <main class="main-container">
+        <section class="auth-card">
+            <h2 id="login-title">Bienvenido</h2>
+            <p id="login-subtitle">Selecciona tu rol para continuar</p>
+
+            <div class="form-group">
+                <label class="form-label">Iniciar sesión como</label>
+                <div class="role-selector">
+                    <button type="button" id="btn-role-residente" class="btn-role active" onclick="cambiarRol('residente')">Residente</button>
+                    <button type="button" id="btn-role-admin" class="btn-role" onclick="cambiarRol('admin')">Administrador</button>
+                </div>
+            </div>
+
+            <div id="admin-notice" class="alert-notice hidden">
+                <p><strong>Acceso restringido:</strong> solo cuentas administrativas preexistentes pueden ingresar aquí. No se permite registro.</p>
+            </div>
+
+            <form id="form-login">
+                <div id="group-casa" class="form-group">
+                    <label for="login-casa" class="form-label">Número de casa</label>
+                    <input type="text" id="login-casa" class="form-input" placeholder="Eje. A-01" required>
+                    <span class="input-help">Solo para residentes registrados</span>
+                </div>
+
+                <div id="group-correo" class="form-group hidden">
+                    <label for="login-correo" class="form-label">Correo electrónico</label>
+                    <input type="email" id="login-correo" class="form-input" placeholder="admin@pagopdp.com">
+                </div>
+
+                <div class="form-group" style="margin-bottom: 25px;">
+                    <label for="login-password" class="form-label">Contraseña</label>
+                    <input type="password" id="login-password" class="form-input" placeholder="••••••" required>
+                </div>
+
+                <button type="submit" class="btn-submit">Iniciar sesion</button>
+            </form>
+
+            <div id="register-router">
+                <div class="divider"><span>o</span></div>
+                <a href="register.html" class="btn-secondary">Crear cuenta de residente</a>
+            </div>
+
+            <p id="admin-footer" class="input-help text-center hidden" style="margin-top: 20px;">
+                Acceso solo para personal autorizado
+            </p>
+        </section>
+    </main>
+
+    <script src="js/database.js"></script>
+    <script src="js/auth.js"></script>
+</body>
+</html>
