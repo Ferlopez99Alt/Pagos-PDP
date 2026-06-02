@@ -62,7 +62,8 @@ if (formLogin) {
             const correo = document.getElementById('login-correo').value.trim().toLowerCase();
             if (correo === ADMIN_CREDENTIALS.correo.toLowerCase() && password === ADMIN_CREDENTIALS.password) {
                 alert("¡Éxito! Redirigiendo al Dashboard de Administrador...");
-                // window.location.href = "dashboard_admin.html";
+                localStorage.setItem('sesion_activa', 'admin');
+                window.location.href = "dashboard_admin.html";
             } else {
                 alert("Error: Credenciales administrativas incorrectas.");
             }

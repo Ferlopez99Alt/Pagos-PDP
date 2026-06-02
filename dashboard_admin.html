@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pagos PDP - Dashboard Admin</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="icon" type="image/png" href="img/icon.png">
+</head>
+<body>
+
+    <header class="navbar">
+        <div class="navbar-icon"><img src="img/logo.png" alt="Pagos PDP" style="height: 50px;"></div>
+        <div class="navbar-title">
+            <h1>Pagos PDP</h1>
+            <p>Sistema de cobros</p>
+        </div>
+        <div class="navbar-user">
+            <span>Juan Ramírez</span>
+            <button class="btn-logout" onclick="cerrarSesion()">Cerrar sesión</button>
+        </div>
+    </header>
+
+    <div class="admin-layout">
+
+        <aside class="sidebar">
+            <nav>
+                <a href="dashboard_admin.html" class="sidebar-item active">Dashboard</a>
+                <a href="#" class="sidebar-item">Usuarios</a>
+                <a href="reportes.html" class="sidebar-item">Reportes</a>
+                <a href="fechas_cobro.html" class="sidebar-item">Fechas de cobro</a>
+            </nav>
+        </aside>
+
+        <main class="admin-main">
+
+            <div class="admin-header">
+                <div>
+                    <h2>Estado de pagos</h2>
+                    <p id="subtitulo-mes"></p>
+                </div>
+                <div class="admin-header-actions">
+                    <button class="btn-export" onclick="exportarCSV()">Exportar CSV</button>
+                    <button class="btn-submit btn-reporte" onclick="window.location.href='reportes.html'">Generar reporte</button>
+                </div>
+            </div>
+
+            <div class="kpi-grid">
+                <div class="kpi-card">
+                    <div class="kpi-label">Total Residentes</div>
+                    <div class="kpi-number" id="kpi-total">0</div>
+                    <div class="kpi-percent" id="kpi-total-pct">100%</div>
+                </div>
+                <div class="kpi-card kpi-pagado">
+                    <div class="kpi-label">Pagados</div>
+                    <div class="kpi-number" id="kpi-pagados">0</div>
+                    <div class="kpi-percent" id="kpi-pagados-pct">0%</div>
+                </div>
+                <div class="kpi-card kpi-pendiente">
+                    <div class="kpi-label">Pendientes</div>
+                    <div class="kpi-number" id="kpi-pendientes">0</div>
+                    <div class="kpi-percent" id="kpi-pendientes-pct">0%</div>
+                </div>
+                <div class="kpi-card kpi-incompleto">
+                    <div class="kpi-label">Incompletos</div>
+                    <div class="kpi-number" id="kpi-incompletos">0</div>
+                    <div class="kpi-percent" id="kpi-incompletos-pct">0%</div>
+                </div>
+            </div>
+
+            <div class="filter-bar">
+                <button class="btn-filter active" data-filter="todos" onclick="aplicarFiltro('todos')">Todos</button>
+                <button class="btn-filter" data-filter="pagado" onclick="aplicarFiltro('pagado')">Pagados</button>
+                <button class="btn-filter" data-filter="pendiente" onclick="aplicarFiltro('pendiente')">Pendientes</button>
+                <button class="btn-filter" data-filter="incompleto" onclick="aplicarFiltro('incompleto')">Incompletos</button>
+            </div>
+
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Casa</th>
+                            <th>Residente</th>
+                            <th>Estado</th>
+                            <th>Monto</th>
+                            <th>Último Pago</th>
+                            <th>Próximo Vence</th>
+                            <th>Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabla-residentes"></tbody>
+                </table>
+            </div>
+
+            <div class="pagination" id="paginacion"></div>
+
+        </main>
+    </div>
+
+    <script src="js/database.js"></script>
+    <script src="js/admin.js"></script>
+</body>
+</html>
