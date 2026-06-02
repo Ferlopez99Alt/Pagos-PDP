@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pagos PDP - Panel del Residente</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+    <header class="navbar">
+        <div class="navbar-icon">🏠</div>
+        <div class="navbar-title">
+            <h1>Pagos PDP</h1>
+            <p>Sistema de cobros</p>
+        </div>
+        <div style="margin-left: auto;">
+            <button id="btn-logout" class="btn-secondary" style="padding: 6px 12px; font-size: 0.8rem; background: transparent; color: white; border-color: white;">Cerrar Sesión</button>
+        </div>
+    </header>
+
+    <main class="main-container dashboard-layout">
+        <div class="dashboard-content">
+            
+            <div class="header-section">
+                <h2 id="residente-nombre">Hola, Residente</h2>
+                <p>Panel de control para la Casa: <strong id="residente-casa" style="color: var(--terracota);">--</strong></p>
+            </div>
+
+            <div class="status-card" id="status-card">
+                <h3 id="status-title">Estado de Cuenta</h3>
+                <p id="status-message">Calculando estado...</p>
+                <div id="payment-action-container" class="hidden" style="margin-top: 15px;">
+                    <button id="btn-pagar" class="btn-submit">Realizar Pago Pendiente ($<span id="monto-pendiente">0.00</span>)</button>
+                </div>
+            </div>
+
+            <div class="history-section" style="margin-top: 30px;">
+                <h3>Historial de Pagos</h3>
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Mes de Cobro</th>
+                                <th>Monto</th>
+                                <th>Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabla-pagos-body">
+                            </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <script src="js/dashboard_residente.js"></script>
+</body>
+</html>
