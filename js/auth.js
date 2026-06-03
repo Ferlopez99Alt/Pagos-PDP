@@ -65,9 +65,11 @@ if (formLogin) {
             // Asume que ADMIN_CREDENTIALS está definido en database.js
             if (typeof ADMIN_CREDENTIALS !== 'undefined' && correo === ADMIN_CREDENTIALS.correo.toLowerCase() && password === ADMIN_CREDENTIALS.password) {
                 alert("¡Éxito! Redirigiendo al Dashboard de Administrador...");
-                // Guardar la sesión del administrador
+                
+                // Guardar la sesión del administrador de forma unificada
                 localStorage.setItem('sesion_actual', JSON.stringify({ rol: 'admin', correo: correo }));
-                window.location.href = "dashboard_admin.html"; // Redirección al panel admin
+                window.location.href = "dashboard_admin.html"; 
+                
             } else {
                 alert("Error: Credenciales administrativas incorrectas.");
             }
@@ -114,7 +116,6 @@ if (formRegister) {
         }
 
         // Validar si la casa existe en los registros maestros del condominio
-        // Asume que CASAS_VALIDAS está definido en database.js
         if (typeof CASAS_VALIDAS !== 'undefined') {
             const casaVerificada = CASAS_VALIDAS.some(c => c.toLowerCase() === casa.toLowerCase());
             if (!casaVerificada) {

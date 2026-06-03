@@ -7,15 +7,6 @@ const ADMIN_CREDENTIALS = {
     password: "admin123"
 };
 
-// 1. Matriz maestra de casas válidas en la colonia (Regla de negocio) 
-const CASAS_VALIDAS = ["A-01", "A-02", "B-05", "C-10", "123", "Eje. A-01"];
-
-// 2. Credenciales de la cuenta administrativa preexistente 
-const ADMIN_CREDENTIALS = {
-    correo: "admin@pagopdp.com",
-    password: "admin123"
-};
-
 // 3. Inicialización de la Base de Datos local para Residentes 
 function inicializarDB() {
     // Si la base de datos local no existe, la creamos
