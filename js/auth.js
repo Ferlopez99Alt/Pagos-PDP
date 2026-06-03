@@ -1,5 +1,5 @@
+// Variable global para el rol actual en la pantalla de login
 let rolActual = 'residente';
-
 
 function cambiarRol(rol) {
     rolActual = rol;
@@ -50,8 +50,9 @@ function cambiarRol(rol) {
     }
 }
 
-// Escuchar evento de envío del Login
-
+// ==========================================
+// LÓGICA DE INICIO DE SESIÓN
+// ==========================================
 const formLogin = document.getElementById('form-login');
 if (formLogin) {
     formLogin.addEventListener('submit', function(event) {
@@ -60,10 +61,15 @@ if (formLogin) {
 
         if (rolActual === 'admin') {
             const correo = document.getElementById('login-correo').value.trim().toLowerCase();
-            if (correo === ADMIN_CREDENTIALS.correo.toLowerCase() && password === ADMIN_CREDENTIALS.password) {
+            
+            // Asume que ADMIN_CREDENTIALS está definido en database.js
+            if (typeof ADMIN_CREDENTIALS !== 'undefined' && correo === ADMIN_CREDENTIALS.correo.toLowerCase() && password === ADMIN_CREDENTIALS.password) {
                 alert("¡Éxito! Redirigiendo al Dashboard de Administrador...");
-                localStorage.setItem('sesion_activa', 'admin');
-                window.location.href = "dashboard_admin.html";
+                
+                // Guardar la sesión del administrador de forma unificada
+                localStorage.setItem('sesion_actual', JSON.stringify({ rol: 'admin', correo: correo }));
+                window.location.href = "dashboard_admin.html"; 
+                
             } else {
                 alert("Error: Credenciales administrativas incorrectas.");
             }
@@ -79,15 +85,20 @@ if (formLogin) {
             );
 
             if (cuentaValida) {
+                // GUARDAMOS LA SESIÓN ACTUAL PARA EL DASHBOARD
+                localStorage.setItem('sesion_actual', JSON.stringify(cuentaValida));
                 alert(`¡Bienvenido! Entrando al panel de la Casa: ${cuentaValida.casa}`);
-                // window.location.href = "dashboard_residente.html";
+                window.location.href = "dashboard_residente.html"; // Redirección al panel residente
             } else {
                 alert("Error: El número de casa o la contraseña son inválidos.");
             }
         }
     });
 }
-// Escuchar evento de envío del Registro
+
+// ==========================================
+// LÓGICA DE REGISTRO
+// ==========================================
 const formRegister = document.getElementById('form-register');
 if (formRegister) {
     formRegister.addEventListener('submit', function(event) {
@@ -105,10 +116,12 @@ if (formRegister) {
         }
 
         // Validar si la casa existe en los registros maestros del condominio
-        const casaVerificada = CASAS_VALIDAS.some(c => c.toLowerCase() === casa.toLowerCase());
-        if (!casaVerificada) {
-            alert(`Validación Denegada: La vivienda '${casa}' no figura en el mapa oficial del sistema.`);
-            return;
+        if (typeof CASAS_VALIDAS !== 'undefined') {
+            const casaVerificada = CASAS_VALIDAS.some(c => c.toLowerCase() === casa.toLowerCase());
+            if (!casaVerificada) {
+                alert(`Validación Denegada: La vivienda '${casa}' no figura en el mapa oficial del sistema.`);
+                return;
+            }
         }
 
         const usuarios = JSON.parse(localStorage.getItem('residentes_db')) || [];
@@ -119,11 +132,11 @@ if (formRegister) {
             return;
         }
 
-        // Guardar el nuevo registro
+        // Guardar el nuevo registro en LocalStorage
         usuarios.push({ nombre, apellido, casa, correo, password });
         localStorage.setItem('residentes_db', JSON.stringify(usuarios));
 
         alert("¡Registro Exitoso! Ahora puedes iniciar sesión.");
-        window.location.href = "index.html";
+        window.location.href = "index.html"; // Redirige de vuelta al login
     });
 }
