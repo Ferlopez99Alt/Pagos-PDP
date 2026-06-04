@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pagos PDP - Reporte de Pagos Parciales</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="icon" type="image/png" href="img/icon.png">
+    <style>
+        .report-main {
+            width: 100%;
+            max-width: 1120px;
+            margin: 0 auto;
+            padding: 28px 20px 40px;
+            box-sizing: border-box;
+        }
+
+        .report-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .report-header h2 {
+            margin: 0 0 4px 0;
+            font-size: 1.45rem;
+            color: #333;
+        }
+
+        .report-header p {
+            margin: 0;
+            color: var(--gris-texto);
+            font-size: 0.92rem;
+        }
+
+        .report-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .report-card {
+            background: var(--blanco);
+            border: 1px solid #f0f0f0;
+            border-radius: 16px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            padding: 18px;
+        }
+
+        .report-switch {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 14px;
+            flex-wrap: wrap;
+        }
+
+        .report-switch .btn-export {
+            padding: 8px 14px;
+            font-size: 0.84rem;
+        }
+
+        .report-switch .btn-export.active {
+            background: #FFF5F2;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .summary-item {
+            background: #faf7f3;
+            border: 1px solid #f0e7de;
+            border-radius: 12px;
+            padding: 10px 14px;
+            min-height: 72px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        .summary-item .label {
+            display: block;
+            color: var(--gris-texto);
+            font-size: 0.8rem;
+            margin-bottom: 4px;
+        }
+
+        .summary-item .value {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #2f2f2f;
+        }
+
+        .summary-item.total .value {
+            color: var(--terracota);
+        }
+
+        .filter-panel {
+            display: grid;
+            grid-template-columns: 1fr 1fr auto;
+            gap: 12px;
+            align-items: end;
+            margin-bottom: 16px;
+        }
+
+        .filter-field {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .filter-field label {
+            font-size: 0.78rem;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            color: var(--gris-texto);
+        }
+
+        .filter-field input,
+        .filter-field select {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 12px 14px;
+            border-radius: 10px;
+            border: 1px solid var(--gris-borde);
+            font-size: 0.92rem;
+            background: var(--blanco);
+        }
+
+        .filter-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-filter-reset {
+            width: auto;
+            padding: 12px 16px;
+            border-radius: 10px;
+            border: 1px solid var(--gris-borde);
+            background: var(--blanco);
+            color: var(--gris-texto);
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .btn-filter-reset:hover {
+            background: #faf7f3;
+        }
+
+        .empty-state {
+            padding: 24px;
+            text-align: center;
+            color: var(--gris-texto);
+        }
+
+        @media (max-width: 900px) {
+            .summary-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .filter-panel {
+                grid-template-columns: 1fr;
+            }
+
+            .report-main {
+                padding: 20px 14px 28px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <header class="navbar">
+        <div class="navbar-icon"><img src="img/logo.png" alt="Pagos PDP" style="height: 50px;"></div>
+        <div class="navbar-title">
+            <h1>Pagos PDP</h1>
+            <p>Sistema de cobros</p>
+        </div>
+        <div class="navbar-user">
+            <span>Administrador</span>
+            <button class="btn-logout" onclick="window.location.href='dashboard_admin.html'">Volver</button>
+        </div>
+    </header>
+
+    <div class="admin-layout">
+        <aside class="sidebar">
+            <nav>
+                <a href="dashboard_admin.html" class="sidebar-item">Dashboard</a>
+                <a href="#" class="sidebar-item">Usuarios</a>
+                <a href="ReporteCuotasPagadas.html" class="sidebar-item active">Reportes</a>
+                <a href="#" class="sidebar-item">Fechas de cobro</a>
+            </nav>
+        </aside>
+
+        <main class="admin-main">
+            <div class="report-main">
+        <section class="report-header">
+            <div>
+                <h2>Reporte de Pagos Parciales</h2>
+                <p>Seguimiento de cobros incompletos y saldo restante por vivienda.</p>
+            </div>
+            <div class="report-actions">
+                <button id="btn-exportar-pdf" class="btn-export" type="button">Exportar PDF</button>
+                <button id="btn-exportar-csv" class="btn-submit" type="button" style="width:auto;padding:10px 18px;">Exportar CSV</button>
+            </div>
+        </section>
+
+        <section class="report-card">
+            <div class="report-switch">
+                <button class="btn-export" type="button" onclick="window.location.href='ReporteCuotasPagadas.html'">Cuotas pagadas</button>
+                <button class="btn-export" type="button" onclick="window.location.href='ReporteCuotasPendientes.html'">Cuotas pendientes</button>
+                <button class="btn-export active" type="button" onclick="window.location.href='ReportePagosParciales.html'">Pagos parciales</button>
+            </div>
+
+            <div class="summary-grid">
+                <div class="summary-item total">
+                    <span class="label">Total parcial recaudado</span>
+                    <span class="value" id="kpi-total-recaudado">$0.00</span>
+                </div>
+                <div class="summary-item">
+                    <span class="label">Saldo pendiente total</span>
+                    <span class="value" id="kpi-saldo-total">$0.00</span>
+                </div>
+                <div class="summary-item">
+                    <span class="label">Cumplimiento</span>
+                    <span class="value" id="kpi-cumplimiento">0%</span>
+                </div>
+            </div>
+
+            <div class="filter-panel">
+                <div class="filter-field">
+                    <label for="filtro-casa">Casa</label>
+                    <input id="filtro-casa" type="text" placeholder="Ej. Torre A - 101">
+                </div>
+                <div class="filter-field">
+                    <label for="filtro-residente">Residente</label>
+                    <input id="filtro-residente" type="text" placeholder="Ej. Ricardo">
+                </div>
+                <div class="filter-actions">
+                    <button id="btn-aplicar-filtros" class="btn-submit" type="button" style="width:auto;padding:12px 18px;">Filtrar</button>
+                    <button id="btn-limpiar-filtros" class="btn-filter-reset" type="button">Limpiar</button>
+                </div>
+            </div>
+
+            <div class="table-container" style="margin-bottom:0;">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Casa</th>
+                            <th>Residente</th>
+                            <th>Pago realizado</th>
+                            <th>Saldo pendiente</th>
+                            <th>Fecha de vencimiento</th>
+                            <th>Estatus</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabla-pagos-parciales"></tbody>
+                </table>
+            </div>
+        </section>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const filtroCasa = document.getElementById('filtro-casa');
+        const filtroResidente = document.getElementById('filtro-residente');
+        const btnExportarPDF = document.getElementById('btn-exportar-pdf');
+        const btnExportarCSV = document.getElementById('btn-exportar-csv');
+        const btnAplicarFiltros = document.getElementById('btn-aplicar-filtros');
+        const btnLimpiarFiltros = document.getElementById('btn-limpiar-filtros');
+        const tablaPagosParciales = document.getElementById('tabla-pagos-parciales');
+        const kpiTotalRecaudado = document.getElementById('kpi-total-recaudado');
+        const kpiSaldoTotal = document.getElementById('kpi-saldo-total');
+        const kpiCumplimiento = document.getElementById('kpi-cumplimiento');
+        let filas = [];
+
+        function exportarCSVTabla(tableSelector, fileName) {
+            const tabla = document.querySelector(tableSelector);
+            if (!tabla) return;
+
+            const headers = Array.from(tabla.querySelectorAll('thead th')).map(th => th.textContent.trim());
+            const filasVisibles = Array.from(tabla.querySelectorAll('tbody tr')).filter(fila => fila.style.display !== 'none');
+            const registros = filasVisibles.map(fila =>
+                Array.from(fila.querySelectorAll('td')).map(td => `"${td.textContent.trim().replace(/"/g, '""')}"`)
+            );
+
+            const csv = [headers.join(','), ...registros.map(cols => cols.join(','))].join('\n');
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = fileName;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function exportarPDFVista(titulo, tableSelector) {
+            const tabla = document.querySelector(tableSelector);
+            if (!tabla) return;
+
+            const win = window.open('', '_blank');
+            if (!win) return;
+
+            win.document.write(`
+                <html>
+                    <head>
+                        <title>${titulo}</title>
+                        <style>
+                            body { font-family: Arial, sans-serif; padding: 20px; }
+                            h1 { margin: 0 0 16px; font-size: 20px; }
+                            table { width: 100%; border-collapse: collapse; }
+                            th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 12px; }
+                            th { background: #f5f5f5; }
+                        </style>
+                    </head>
+                    <body>
+                        <h1>${titulo}</h1>
+                        ${tabla.outerHTML}
+                    </body>
+                </html>
+            `);
+            win.document.close();
+            win.focus();
+            win.print();
+        }
+
+        function leerResidentes() {
+            if (typeof leerResidentesLocal === 'function') {
+                return leerResidentesLocal();
+            }
+            return JSON.parse(localStorage.getItem('residentes_db')) || [];
+        }
+
+        function calcularMontos(residente) {
+            const montoOriginal = Number(residente.montoOriginal ?? residente.monto ?? 0);
+            let pagado = Number(residente.montoPagadoAcumulado ?? 0);
+            const estado = (residente.estadoPago || '').toLowerCase();
+
+            // Compatibilidad con registros antiguos sin acumulado.
+            if (pagado <= 0 && estado === 'pagado') {
+                pagado = montoOriginal;
+            }
+
+            const saldo = Math.max(montoOriginal - pagado, 0);
+            return { montoOriginal, pagado, saldo, estado };
+        }
+
+        function obtenerEtiquetaEstado(pagado, saldo) {
+            if (saldo <= 0 && pagado > 0) {
+                return { texto: 'Completado', clase: 'badge-pagado' };
+            }
+            if (pagado > 0) {
+                return { texto: 'Parcial', clase: 'badge-pendiente' };
+            }
+            return { texto: 'Pendiente', clase: 'badge-incompleto' };
+        }
+
+        function formatearFecha(fechaISO) {
+            if (!fechaISO) return '—';
+            const [y, m, d] = fechaISO.split('-');
+            if (!y || !m || !d) return '—';
+            return `${d}/${m}/${y}`;
+        }
+
+        function actualizarResumen(residentes) {
+            const montos = residentes.map(calcularMontos);
+            const totalRecaudado = montos.reduce((acc, item) => acc + item.pagado, 0);
+            const saldoTotal = montos.reduce((acc, item) => acc + item.saldo, 0);
+            const completados = montos.filter(item => item.saldo <= 0 && item.montoOriginal > 0).length;
+            const cumplimiento = residentes.length > 0 ? Math.round((completados / residentes.length) * 100) : 0;
+
+            kpiTotalRecaudado.textContent = `$${totalRecaudado.toFixed(2)}`;
+            kpiSaldoTotal.textContent = `$${saldoTotal.toFixed(2)}`;
+            kpiCumplimiento.textContent = `${cumplimiento}%`;
+        }
+
+        function renderizarTabla() {
+            const residentes = leerResidentes();
+            actualizarResumen(residentes);
+
+            if (residentes.length === 0) {
+                tablaPagosParciales.innerHTML = '<tr><td colspan="6" class="empty-state">No hay datos almacenados para mostrar.</td></tr>';
+                filas = [];
+                return;
+            }
+
+            tablaPagosParciales.innerHTML = residentes.map(residente => {
+                const nombreCompleto = `${residente.nombre || ''} ${residente.apellido || ''}`.trim();
+                const { pagado, saldo } = calcularMontos(residente);
+                const estadoUi = obtenerEtiquetaEstado(pagado, saldo);
+                const fechaVencimiento = residente.proximoVence || '';
+
+                return `
+                    <tr data-casa="${residente.casa || ''}" data-residente="${nombreCompleto}" data-vencimiento="${fechaVencimiento}">
+                        <td>${residente.casa || '—'}</td>
+                        <td>${nombreCompleto || '—'}</td>
+                        <td>$${pagado.toFixed(2)}</td>
+                        <td>$${saldo.toFixed(2)}</td>
+                        <td>${formatearFecha(fechaVencimiento)}</td>
+                        <td><span class="badge ${estadoUi.clase}">${estadoUi.texto}</span></td>
+                    </tr>
+                `;
+            }).join('');
+
+            filas = Array.from(document.querySelectorAll('#tabla-pagos-parciales tr[data-casa]'));
+        }
+
+        function aplicarFiltros() {
+            const valorCasa = filtroCasa.value.trim().toLowerCase();
+            const valorResidente = filtroResidente.value.trim().toLowerCase();
+
+            filas.forEach(fila => {
+                const casa = (fila.dataset.casa || '').toLowerCase();
+                const residente = (fila.dataset.residente || '').toLowerCase();
+
+                const coincideCasa = !valorCasa || casa.includes(valorCasa);
+                const coincideResidente = !valorResidente || residente.includes(valorResidente);
+
+                fila.style.display = coincideCasa && coincideResidente ? '' : 'none';
+            });
+        }
+
+        function limpiarFiltros() {
+            filtroCasa.value = '';
+            filtroResidente.value = '';
+            filas.forEach(fila => fila.style.display = '');
+        }
+
+        btnAplicarFiltros.addEventListener('click', aplicarFiltros);
+        btnLimpiarFiltros.addEventListener('click', limpiarFiltros);
+        filtroCasa.addEventListener('input', aplicarFiltros);
+        filtroResidente.addEventListener('input', aplicarFiltros);
+        btnExportarCSV.addEventListener('click', () => exportarCSVTabla('.data-table', 'reporte_pagos_parciales.csv'));
+        btnExportarPDF.addEventListener('click', () => exportarPDFVista('Reporte de Pagos Parciales', '.data-table'));
+
+        renderizarTabla();
+    </script>
+
+</body>
+</html>

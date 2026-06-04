@@ -76,7 +76,9 @@ if (formLogin) {
         } else {
             // RESIDENTE: Limpiamos espacios al inicio/final con .trim()
             const casa = document.getElementById('login-casa').value.trim().toLowerCase();
-            const usuarios = JSON.parse(localStorage.getItem('residentes_db')) || [];
+            const usuarios = typeof leerResidentesLocal === 'function'
+                ? leerResidentesLocal()
+                : (JSON.parse(localStorage.getItem('residentes_db')) || []).map(u => u);
             
             // Buscamos ignorando espacios extra y fijando todo en minúsculas
             const cuentaValida = usuarios.find(u => 
@@ -86,7 +88,10 @@ if (formLogin) {
 
             if (cuentaValida) {
                 // GUARDAMOS LA SESIÓN ACTUAL PARA EL DASHBOARD
-                localStorage.setItem('sesion_actual', JSON.stringify(cuentaValida));
+                const residenteSesion = typeof normalizarResidente === 'function'
+                    ? normalizarResidente(cuentaValida)
+                    : cuentaValida;
+                localStorage.setItem('sesion_actual', JSON.stringify(residenteSesion));
                 alert(`¡Bienvenido! Entrando al panel de la Casa: ${cuentaValida.casa}`);
                 window.location.href = "dashboard_residente.html"; // Redirección al panel residente
             } else {
@@ -124,7 +129,9 @@ if (formRegister) {
             }
         }
 
-        const usuarios = JSON.parse(localStorage.getItem('residentes_db')) || [];
+        const usuarios = typeof leerResidentesLocal === 'function'
+            ? leerResidentesLocal()
+            : (JSON.parse(localStorage.getItem('residentes_db')) || []);
         const casaOcupada = usuarios.some(u => u.casa.toLowerCase() === casa.toLowerCase());
 
         if (casaOcupada) {
@@ -133,8 +140,37 @@ if (formRegister) {
         }
 
         // Guardar el nuevo registro en LocalStorage
-        usuarios.push({ nombre, apellido, casa, correo, password });
-        localStorage.setItem('residentes_db', JSON.stringify(usuarios));
+        const nuevoResidente = typeof normalizarResidente === 'function'
+            ? normalizarResidente({
+                nombre,
+                apellido,
+                casa,
+                correo,
+                password,
+                estadoPago: 'pendiente',
+                monto: 25.00,
+                montoOriginal: 25.00,
+                montoPagadoAcumulado: 0
+            })
+            : {
+                nombre,
+                apellido,
+                casa,
+                correo,
+                password,
+                estadoPago: 'pendiente',
+                monto: 25.00,
+                montoOriginal: 25.00,
+                montoPagadoAcumulado: 0,
+                ultimoPago: '',
+                proximoVence: ''
+            };
+        usuarios.push(nuevoResidente);
+        if (typeof guardarResidentesLocal === 'function') {
+            guardarResidentesLocal(usuarios);
+        } else {
+            localStorage.setItem('residentes_db', JSON.stringify(usuarios));
+        }
 
         alert("¡Registro Exitoso! Ahora puedes iniciar sesión.");
         window.location.href = "index.html"; // Redirige de vuelta al login
