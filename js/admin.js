@@ -5,10 +5,20 @@ let paginaActual = 1;
 const FILAS_POR_PAGINA = 7;
 
 document.addEventListener('DOMContentLoaded', () => {
-    if (localStorage.getItem('sesion_activa') !== 'admin') {
+    const sesionActual = JSON.parse(localStorage.getItem('sesion_actual') || 'null');
+    const esAdminSesionNueva = sesionActual && sesionActual.rol === 'admin';
+    const esAdminSesionLegacy = localStorage.getItem('sesion_activa') === 'admin';
+
+    if (!esAdminSesionNueva && !esAdminSesionLegacy) {
         window.location.href = 'index.html';
         return;
     }
+
+    // Migra sesiones antiguas al nuevo formato unificado
+    if (!esAdminSesionNueva && esAdminSesionLegacy) {
+        localStorage.setItem('sesion_actual', JSON.stringify({ rol: 'admin' }));
+    }
+
     inicializarDatosPrueba();
     mostrarMesActual();
     actualizarKPIs();
@@ -22,7 +32,9 @@ function mostrarMesActual() {
 }
 
 function inicializarDatosPrueba() {
-    let residentes = JSON.parse(localStorage.getItem('residentes_db')) || [];
+    let residentes = typeof leerResidentesLocal === 'function'
+        ? leerResidentesLocal()
+        : (JSON.parse(localStorage.getItem('residentes_db')) || []).map(r => r);
 
     const prueba = [
         { nombre: 'María',   apellido: 'González',  casa: 'A-02', correo: 'maria@correo.com',   password: 'res123', estadoPago: 'pagado',    monto: 25.00, ultimoPago: '2025-06-05', proximoVence: '2025-07-05' },
@@ -41,21 +53,27 @@ function inicializarDatosPrueba() {
     // Agregar estadoPago a residentes existentes que no lo tienen
     residentes = residentes.map(r => {
         if (!r.estadoPago) {
-            return { ...r, estadoPago: 'pagado', monto: 25.00, ultimoPago: '2025-06-05', proximoVence: '2025-07-05' };
+            return typeof normalizarResidente === 'function'
+                ? normalizarResidente({ ...r, estadoPago: 'pagado', monto: 25.00, ultimoPago: '2025-06-05', proximoVence: '2025-07-05' })
+                : { ...r, estadoPago: 'pagado', monto: 25.00, ultimoPago: '2025-06-05', proximoVence: '2025-07-05' };
         }
-        return r;
+        return typeof normalizarResidente === 'function' ? normalizarResidente(r) : r;
     });
 
     // Agregar residentes de prueba que no existan por numero de casa
     const casasExistentes = new Set(residentes.map(r => r.casa));
     for (const r of prueba) {
         if (!casasExistentes.has(r.casa)) {
-            residentes.push(r);
+            residentes.push(typeof normalizarResidente === 'function' ? normalizarResidente(r) : r);
             casasExistentes.add(r.casa);
         }
     }
 
-    localStorage.setItem('residentes_db', JSON.stringify(residentes));
+    if (typeof guardarResidentesLocal === 'function') {
+        guardarResidentesLocal(residentes);
+    } else {
+        localStorage.setItem('residentes_db', JSON.stringify(residentes));
+    }
 }
 
 function leerResidentes() {
@@ -183,6 +201,7 @@ function exportarCSV() {
 }
 
 function cerrarSesion() {
+    localStorage.removeItem('sesion_actual');
     localStorage.removeItem('sesion_activa');
     localStorage.removeItem('sesion_activa_casa');
     window.location.href = 'index.html';

@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pagos PDP - Reporte de Cuotas Pendientes</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="icon" type="image/png" href="img/icon.png">
+    <style>
+        .report-main {
+            width: 100%;
+            max-width: 1120px;
+            margin: 0 auto;
+            padding: 28px 20px 40px;
+            box-sizing: border-box;
+        }
+
+        .report-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .report-header h2 {
+            margin: 0 0 4px 0;
+            font-size: 1.45rem;
+            color: #333;
+        }
+
+        .report-header p {
+            margin: 0;
+            color: var(--gris-texto);
+            font-size: 0.92rem;
+        }
+
+        .report-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .report-card {
+            background: var(--blanco);
+            border: 1px solid #f0f0f0;
+            border-radius: 16px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            padding: 18px;
+        }
+
+        .report-switch {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 14px;
+            flex-wrap: wrap;
+        }
+
+        .report-switch .btn-export {
+            padding: 8px 14px;
+            font-size: 0.84rem;
+        }
+
+        .report-switch .btn-export.active {
+            background: #FFF5F2;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .summary-item {
+            background: #faf7f3;
+            border: 1px solid #f0e7de;
+            border-radius: 12px;
+            padding: 10px 14px;
+            min-height: 72px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        .summary-item .label {
+            display: block;
+            color: var(--gris-texto);
+            font-size: 0.8rem;
+            margin-bottom: 4px;
+        }
+
+        .summary-item .value {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #2f2f2f;
+        }
+
+        .summary-item.total .value {
+            color: var(--terracota);
+        }
+
+        .filter-panel {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr auto;
+            gap: 12px;
+            align-items: end;
+            margin-bottom: 16px;
+        }
+
+        .filter-field {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .filter-field label {
+            font-size: 0.78rem;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            color: var(--gris-texto);
+        }
+
+        .filter-field input,
+        .filter-field select {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 12px 14px;
+            border-radius: 10px;
+            border: 1px solid var(--gris-borde);
+            font-size: 0.92rem;
+            background: var(--blanco);
+        }
+
+        .filter-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-filter-reset {
+            width: auto;
+            padding: 12px 16px;
+            border-radius: 10px;
+            border: 1px solid var(--gris-borde);
+            background: var(--blanco);
+            color: var(--gris-texto);
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .btn-filter-reset:hover {
+            background: #faf7f3;
+        }
+
+        .empty-state {
+            padding: 24px;
+            text-align: center;
+            color: var(--gris-texto);
+        }
+
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.42);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1200;
+            padding: 14px;
+            box-sizing: border-box;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+        }
+
+        .modal-card {
+            width: 100%;
+            max-width: 520px;
+            background: var(--blanco);
+            border-radius: 14px;
+            border: 1px solid #eee;
+            box-shadow: 0 10px 24px rgba(0, 0, 0, 0.2);
+            padding: 18px;
+            box-sizing: border-box;
+        }
+
+        .modal-card h3 {
+            margin: 0 0 6px 0;
+            color: #2f2f2f;
+            font-size: 1.15rem;
+        }
+
+        .modal-subtitle {
+            margin: 0 0 14px 0;
+            font-size: 0.9rem;
+            color: var(--gris-texto);
+        }
+
+        .modal-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .modal-field {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .modal-field.full {
+            grid-column: 1 / -1;
+        }
+
+        .modal-field label {
+            font-size: 0.76rem;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            color: var(--gris-texto);
+        }
+
+        .modal-field input,
+        .modal-field select {
+            width: 100%;
+            padding: 11px 12px;
+            border: 1px solid var(--gris-borde);
+            border-radius: 10px;
+            box-sizing: border-box;
+            font-size: 0.9rem;
+            background: var(--blanco);
+        }
+
+        .modal-field input[readonly] {
+            background: #f7f7f7;
+            color: #444;
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+            margin-top: 4px;
+        }
+
+        .btn-modal-cancel {
+            width: auto;
+            padding: 10px 14px;
+            border-radius: 10px;
+            border: 1px solid var(--gris-borde);
+            background: var(--blanco);
+            color: var(--gris-texto);
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .btn-modal-cancel:hover {
+            background: #faf7f3;
+        }
+
+        @media (max-width: 900px) {
+            .summary-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .filter-panel {
+                grid-template-columns: 1fr;
+            }
+
+            .report-main {
+                padding: 20px 14px 28px;
+            }
+
+            .modal-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <header class="navbar">
+        <div class="navbar-icon"><img src="img/logo.png" alt="Pagos PDP" style="height: 50px;"></div>
+        <div class="navbar-title">
+            <h1>Pagos PDP</h1>
+            <p>Sistema de cobros</p>
+        </div>
+        <div class="navbar-user">
+            <span>Administrador</span>
+            <button class="btn-logout" onclick="window.location.href='dashboard_admin.html'">Volver</button>
+        </div>
+    </header>
+
+    <div class="admin-layout">
+        <aside class="sidebar">
+            <nav>
+                <a href="dashboard_admin.html" class="sidebar-item">Dashboard</a>
+                <a href="#" class="sidebar-item">Usuarios</a>
+                <a href="ReporteCuotasPagadas.html" class="sidebar-item active">Reportes</a>
+                <a href="#" class="sidebar-item">Fechas de cobro</a>
+            </nav>
+        </aside>
+
+        <main class="admin-main">
+            <div class="report-main">
+        <section class="report-header">
+            <div>
+                <h2>Reporte de Cuotas Pendientes</h2>
+                <p>Analisis de residentes con saldos activos y pagos vencidos.</p>
+            </div>
+            <div class="report-actions">
+                <button id="btn-exportar-pdf" class="btn-export" type="button">Exportar PDF</button>
+                <button id="btn-exportar-csv" class="btn-submit" type="button" style="width:auto;padding:10px 18px;">Exportar CSV</button>
+            </div>
+        </section>
+
+        <section class="report-card">
+            <div class="report-switch">
+                <button class="btn-export" type="button" onclick="window.location.href='ReporteCuotasPagadas.html'">Cuotas pagadas</button>
+                <button class="btn-export active" type="button" onclick="window.location.href='ReporteCuotasPendientes.html'">Cuotas pendientes</button>
+                <button class="btn-export" type="button" onclick="window.location.href='ReportePagosParciales.html'">Pagos parciales</button>
+            </div>
+
+            <div class="summary-grid">
+                <div class="summary-item total">
+                    <span class="label">Monto adeudado</span>
+                    <span class="value" id="kpi-monto-adeudado">$0.00</span>
+                </div>
+                <div class="summary-item">
+                    <span class="label">Cuotas pendientes</span>
+                    <span class="value" id="kpi-cuotas-pendientes">0</span>
+                </div>
+                <div class="summary-item">
+                    <span class="label">Eficiencia de cobro</span>
+                    <span class="value" id="kpi-eficiencia">0%</span>
+                </div>
+            </div>
+
+            <div class="filter-panel">
+                <div class="filter-field">
+                    <label for="filtro-casa">Casa</label>
+                    <input id="filtro-casa" type="text" placeholder="Ej. A-102">
+                </div>
+                <div class="filter-field">
+                    <label for="filtro-residente">Residente</label>
+                    <input id="filtro-residente" type="text" placeholder="Ej. Elena">
+                </div>
+                <div class="filter-field">
+                    <label for="filtro-estado">Estado</label>
+                    <select id="filtro-estado">
+                        <option value="todos">Todos</option>
+                        <option value="pendiente">Pendiente</option>
+                        <option value="enmora">En mora</option>
+                    </select>
+                </div>
+                <div class="filter-actions">
+                    <button id="btn-aplicar-filtros" class="btn-submit" type="button" style="width:auto;padding:12px 18px;">Filtrar</button>
+                    <button id="btn-limpiar-filtros" class="btn-filter-reset" type="button">Limpiar</button>
+                </div>
+            </div>
+
+            <div class="table-container" style="margin-bottom:0;">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Casa</th>
+                            <th>Residente</th>
+                            <th>Monto pendiente</th>
+                            <th>Fecha de vencimiento</th>
+                            <th>Estatus</th>
+                            <th>Accion</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabla-cuotas-pendientes"></tbody>
+                </table>
+            </div>
+        </section>
+            </div>
+        </main>
+    </div>
+
+    <div id="modal-registrar-pago" class="modal-overlay" aria-hidden="true">
+        <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modal-pago-titulo">
+            <h3 id="modal-pago-titulo">Registrar Pago</h3>
+            <p class="modal-subtitle">Registra un pago total o parcial para la cuenta seleccionada.</p>
+
+            <div class="modal-grid">
+                <div class="modal-field">
+                    <label for="modal-casa">Casa</label>
+                    <input id="modal-casa" type="text" readonly>
+                </div>
+                <div class="modal-field">
+                    <label for="modal-residente">Residente</label>
+                    <input id="modal-residente" type="text" readonly>
+                </div>
+                <div class="modal-field">
+                    <label for="modal-monto-pendiente">Monto pendiente</label>
+                    <input id="modal-monto-pendiente" type="text" readonly>
+                </div>
+                <div class="modal-field">
+                    <label for="modal-tipo-pago">Tipo de pago</label>
+                    <select id="modal-tipo-pago">
+                        <option value="total">Total</option>
+                        <option value="parcial">Parcial</option>
+                    </select>
+                </div>
+                <div class="modal-field full">
+                    <label for="modal-monto-pagado">Monto a registrar</label>
+                    <input id="modal-monto-pagado" type="number" min="0" step="0.01" placeholder="0.00">
+                </div>
+            </div>
+
+            <div class="modal-actions">
+                <button id="btn-cancelar-pago" type="button" class="btn-modal-cancel">Cancelar</button>
+                <button id="btn-guardar-pago" type="button" class="btn-submit" style="width:auto;padding:10px 14px;">Guardar pago</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const filtroCasa = document.getElementById('filtro-casa');
+        const filtroResidente = document.getElementById('filtro-residente');
+        const filtroEstado = document.getElementById('filtro-estado');
+        const btnAplicarFiltros = document.getElementById('btn-aplicar-filtros');
+        const btnLimpiarFiltros = document.getElementById('btn-limpiar-filtros');
+        const btnExportarPDF = document.getElementById('btn-exportar-pdf');
+        const btnExportarCSV = document.getElementById('btn-exportar-csv');
+        const tablaPendientes = document.getElementById('tabla-cuotas-pendientes');
+        const kpiMontoAdeudado = document.getElementById('kpi-monto-adeudado');
+        const kpiCuotasPendientes = document.getElementById('kpi-cuotas-pendientes');
+        const kpiEficiencia = document.getElementById('kpi-eficiencia');
+        const modalRegistrarPago = document.getElementById('modal-registrar-pago');
+        const inputModalCasa = document.getElementById('modal-casa');
+        const inputModalResidente = document.getElementById('modal-residente');
+        const inputModalMontoPendiente = document.getElementById('modal-monto-pendiente');
+        const selectModalTipoPago = document.getElementById('modal-tipo-pago');
+        const inputModalMontoPagado = document.getElementById('modal-monto-pagado');
+        const btnCancelarPago = document.getElementById('btn-cancelar-pago');
+        const btnGuardarPago = document.getElementById('btn-guardar-pago');
+        let filas = [];
+        let residenteEnGestion = null;
+
+        function exportarCSVTabla(tableSelector, fileName) {
+            const tabla = document.querySelector(tableSelector);
+            if (!tabla) return;
+
+            const headers = Array.from(tabla.querySelectorAll('thead th')).map(th => th.textContent.trim());
+            const filasVisibles = Array.from(tabla.querySelectorAll('tbody tr')).filter(fila => fila.style.display !== 'none');
+            const registros = filasVisibles.map(fila =>
+                Array.from(fila.querySelectorAll('td')).map(td => `"${td.textContent.trim().replace(/"/g, '""')}"`)
+            );
+
+            const csv = [headers.join(','), ...registros.map(cols => cols.join(','))].join('\n');
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = fileName;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function exportarPDFVista(titulo, tableSelector) {
+            const tabla = document.querySelector(tableSelector);
+            if (!tabla) return;
+
+            const win = window.open('', '_blank');
+            if (!win) return;
+
+            win.document.write(`
+                <html>
+                    <head>
+                        <title>${titulo}</title>
+                        <style>
+                            body { font-family: Arial, sans-serif; padding: 20px; }
+                            h1 { margin: 0 0 16px; font-size: 20px; }
+                            table { width: 100%; border-collapse: collapse; }
+                            th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 12px; }
+                            th { background: #f5f5f5; }
+                        </style>
+                    </head>
+                    <body>
+                        <h1>${titulo}</h1>
+                        ${tabla.outerHTML}
+                    </body>
+                </html>
+            `);
+            win.document.close();
+            win.focus();
+            win.print();
+        }
+
+        function leerResidentes() {
+            if (typeof leerResidentesLocal === 'function') {
+                return leerResidentesLocal();
+            }
+            return JSON.parse(localStorage.getItem('residentes_db')) || [];
+        }
+
+        function normalizarResidenteBasico(residente) {
+            return {
+                nombre: residente?.nombre || '',
+                apellido: residente?.apellido || '',
+                casa: residente?.casa || '',
+                correo: residente?.correo || '',
+                password: residente?.password || '',
+                estadoPago: residente?.estadoPago || 'pendiente',
+                monto: Number(residente?.monto ?? 25),
+                montoOriginal: Number(residente?.montoOriginal ?? residente?.monto ?? 25),
+                montoPagadoAcumulado: Number(residente?.montoPagadoAcumulado ?? 0),
+                ultimoPago: residente?.ultimoPago || '',
+                proximoVence: residente?.proximoVence || ''
+            };
+        }
+
+        function guardarResidentes(residentes) {
+            if (typeof guardarResidentesLocal === 'function') {
+                guardarResidentesLocal(residentes);
+                return;
+            }
+            localStorage.setItem('residentes_db', JSON.stringify(residentes.map(normalizarResidenteBasico)));
+        }
+
+        function obtenerPendientes() {
+            const residentes = leerResidentes();
+            return residentes.filter(residente => {
+                const estado = (residente.estadoPago || '').toLowerCase();
+                return estado !== 'pagado';
+            });
+        }
+
+        function obtenerEstadoPorVencimiento(fechaISO) {
+            if (!fechaISO) return 'pendiente';
+
+            const fechaVencimiento = new Date(fechaISO + 'T00:00:00');
+            const hoy = new Date();
+            const hoySinHora = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate());
+
+            return fechaVencimiento < hoySinHora ? 'enmora' : 'pendiente';
+        }
+
+        function formatearFecha(fechaISO) {
+            if (!fechaISO) return '—';
+            const [y, m, d] = fechaISO.split('-');
+            if (!y || !m || !d) return '—';
+            return `${d}/${m}/${y}`;
+        }
+
+        function actualizarResumen() {
+            const residentes = leerResidentes();
+            const pendientes = obtenerPendientes();
+            const totalAdeudado = pendientes.reduce((acc, residente) => acc + Number(residente.monto || 0), 0);
+            const total = residentes.length;
+            const pagados = residentes.filter(r => (r.estadoPago || '').toLowerCase() === 'pagado').length;
+            const eficiencia = total > 0 ? Math.round((pagados / total) * 100) : 0;
+
+            kpiMontoAdeudado.textContent = `$${totalAdeudado.toFixed(2)}`;
+            kpiCuotasPendientes.textContent = pendientes.length;
+            kpiEficiencia.textContent = `${eficiencia}%`;
+        }
+
+        function renderizarTabla() {
+            const pendientes = obtenerPendientes();
+            actualizarResumen();
+
+            if (pendientes.length === 0) {
+                tablaPendientes.innerHTML = '<tr><td colspan="6" class="empty-state">No hay cuotas pendientes almacenadas para mostrar.</td></tr>';
+                filas = [];
+                return;
+            }
+
+            tablaPendientes.innerHTML = pendientes.map(residente => {
+                const nombreCompleto = `${residente.nombre || ''} ${residente.apellido || ''}`.trim();
+                const estado = obtenerEstadoPorVencimiento(residente.proximoVence || '');
+                const esPendiente = estado === 'pendiente';
+                const etiquetaEstado = esPendiente ? 'Pendiente' : 'En mora';
+                const claseEstado = esPendiente ? 'badge-pendiente' : 'badge-incompleto';
+
+                return `
+                    <tr data-casa="${residente.casa || ''}" data-residente="${nombreCompleto}" data-estado="${estado}">
+                        <td>${residente.casa || '—'}</td>
+                        <td>${nombreCompleto || '—'}</td>
+                        <td>$${Number(residente.monto || 0).toFixed(2)}</td>
+                        <td>${formatearFecha(residente.proximoVence || '')}</td>
+                        <td><span class="badge ${claseEstado}">${etiquetaEstado}</span></td>
+                        <td><button class="btn-export btn-gestionar" data-casa="${residente.casa || ''}" type="button" style="padding:6px 10px;font-size:0.8rem;">Gestionar</button></td>
+                    </tr>
+                `;
+            }).join('');
+
+            filas = Array.from(document.querySelectorAll('#tabla-cuotas-pendientes tr[data-casa]'));
+        }
+
+        function estadoCoincide(valorEstado, estadoFila) {
+            if (valorEstado === 'todos') return true;
+            return estadoFila === valorEstado;
+        }
+
+        function aplicarFiltros() {
+            const valorCasa = filtroCasa.value.trim().toLowerCase();
+            const valorResidente = filtroResidente.value.trim().toLowerCase();
+            const valorEstado = filtroEstado.value;
+
+            filas.forEach(fila => {
+                const casa = (fila.dataset.casa || '').toLowerCase();
+                const residente = (fila.dataset.residente || '').toLowerCase();
+                const estado = (fila.dataset.estado || '').toLowerCase();
+
+                const coincideCasa = !valorCasa || casa.includes(valorCasa);
+                const coincideResidente = !valorResidente || residente.includes(valorResidente);
+                const coincideEstado = estadoCoincide(valorEstado, estado);
+
+                fila.style.display = coincideCasa && coincideResidente && coincideEstado ? '' : 'none';
+            });
+        }
+
+        function limpiarFiltros() {
+            filtroCasa.value = '';
+            filtroResidente.value = '';
+            filtroEstado.value = 'todos';
+            filas.forEach(fila => fila.style.display = '');
+        }
+
+        function abrirModalGestion(casa) {
+            const residentes = leerResidentes();
+            residenteEnGestion = residentes.find(residente => (residente.casa || '').toLowerCase() === (casa || '').toLowerCase()) || null;
+            if (!residenteEnGestion) return;
+
+            const nombreCompleto = `${residenteEnGestion.nombre || ''} ${residenteEnGestion.apellido || ''}`.trim();
+            const montoPendiente = Number(residenteEnGestion.monto || 0);
+
+            inputModalCasa.value = residenteEnGestion.casa || '';
+            inputModalResidente.value = nombreCompleto;
+            inputModalMontoPendiente.value = `$${montoPendiente.toFixed(2)}`;
+            selectModalTipoPago.value = 'total';
+            inputModalMontoPagado.value = montoPendiente.toFixed(2);
+            inputModalMontoPagado.readOnly = true;
+
+            modalRegistrarPago.classList.add('show');
+            modalRegistrarPago.setAttribute('aria-hidden', 'false');
+        }
+
+        function cerrarModalGestion() {
+            modalRegistrarPago.classList.remove('show');
+            modalRegistrarPago.setAttribute('aria-hidden', 'true');
+            residenteEnGestion = null;
+        }
+
+        function guardarPagoGestion() {
+            if (!residenteEnGestion) return;
+
+            const tipoPago = selectModalTipoPago.value;
+            const residentes = leerResidentes();
+            const indice = residentes.findIndex(residente => (residente.casa || '').toLowerCase() === (residenteEnGestion.casa || '').toLowerCase());
+            if (indice === -1) {
+                cerrarModalGestion();
+                return;
+            }
+
+            const hoy = new Date();
+            const hoyISO = hoy.toISOString().slice(0, 10);
+            const montoActual = Number(residentes[indice].monto || 0);
+            const montoPagadoAcumuladoActual = Number(residentes[indice].montoPagadoAcumulado || 0);
+            let montoPago = Number(inputModalMontoPagado.value || 0);
+
+            if (tipoPago === 'total') {
+                montoPago = montoActual;
+            }
+
+            if (montoPago <= 0) {
+                alert('El monto a registrar debe ser mayor a 0.');
+                return;
+            }
+
+            if (montoPago > montoActual) {
+                alert('El monto a registrar no puede ser mayor al monto pendiente.');
+                return;
+            }
+
+            if (tipoPago === 'total' || montoPago === montoActual) {
+                const proximo = new Date(hoy);
+                proximo.setMonth(proximo.getMonth() + 1);
+
+                residentes[indice] = normalizarResidenteBasico({
+                    ...residentes[indice],
+                    estadoPago: 'pagado',
+                    monto: 0,
+                    montoPagadoAcumulado: Number((montoPagadoAcumuladoActual + montoActual).toFixed(2)),
+                    ultimoPago: hoyISO,
+                    proximoVence: proximo.toISOString().slice(0, 10)
+                });
+            } else {
+                residentes[indice] = normalizarResidenteBasico({
+                    ...residentes[indice],
+                    estadoPago: 'incompleto',
+                    monto: Number((montoActual - montoPago).toFixed(2)),
+                    montoPagadoAcumulado: Number((montoPagadoAcumuladoActual + montoPago).toFixed(2)),
+                    ultimoPago: hoyISO
+                });
+            }
+
+            guardarResidentes(residentes);
+            cerrarModalGestion();
+            renderizarTabla();
+            aplicarFiltros();
+        }
+
+        btnAplicarFiltros.addEventListener('click', aplicarFiltros);
+        btnLimpiarFiltros.addEventListener('click', limpiarFiltros);
+        filtroCasa.addEventListener('input', aplicarFiltros);
+        filtroResidente.addEventListener('input', aplicarFiltros);
+        filtroEstado.addEventListener('change', aplicarFiltros);
+        btnExportarCSV.addEventListener('click', () => exportarCSVTabla('.data-table', 'reporte_cuotas_pendientes.csv'));
+        btnExportarPDF.addEventListener('click', () => exportarPDFVista('Reporte de Cuotas Pendientes', '.data-table'));
+
+        tablaPendientes.addEventListener('click', (event) => {
+            const botonGestion = event.target.closest('.btn-gestionar');
+            if (!botonGestion) return;
+            abrirModalGestion(botonGestion.dataset.casa || '');
+        });
+
+        selectModalTipoPago.addEventListener('change', () => {
+            const montoTexto = inputModalMontoPendiente.value.replace('$', '');
+            const montoPendiente = Number(montoTexto || 0);
+            const esParcial = selectModalTipoPago.value === 'parcial';
+            inputModalMontoPagado.readOnly = !esParcial;
+            inputModalMontoPagado.value = montoPendiente.toFixed(2);
+            if (esParcial) {
+                inputModalMontoPagado.focus();
+                inputModalMontoPagado.select();
+            }
+        });
+
+        btnCancelarPago.addEventListener('click', cerrarModalGestion);
+        btnGuardarPago.addEventListener('click', guardarPagoGestion);
+
+        modalRegistrarPago.addEventListener('click', (event) => {
+            if (event.target === modalRegistrarPago) {
+                cerrarModalGestion();
+            }
+        });
+
+        renderizarTabla();
+    </script>
+
+</body>
+</html>
